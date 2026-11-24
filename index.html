@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI SRT Subtitle Translator (Myanmar - No VPN)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'Padauk', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .myanmar-text {
+            font-family: 'Padauk', sans-serif;
+            line-height: 1.7;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Navigation / Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-500/30">
+                    <i data-lucide="languages" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                        Gemini SRT Translator
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">No-VPN Netlify Proxy • Smart Subtitle Translation</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+                    No-VPN Proxy Active
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Custom Notification Toast -->
+        <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+        <!-- Step 1: Configuration & File Upload Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: API Key & Settings -->
+            <div class="lg:col-span-5 bg-slate-800/50 border border-slate-700/80 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4">
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-base font-semibold text-white flex items-center gap-2">
+                            <i data-lucide="key-round" class="w-4 h-4 text-indigo-400"></i>
+                            <span>၁။ Gemini API Key ထည့်သွင်းပါ</span>
+                        </h2>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" 
+                           class="text-xs text-indigo-400 hover:text-indigo-300 underline flex items-center gap-1">
+                            Key ရယူရန် <i data-lucide="external-link" class="w-3 h-3"></i>
+                        </a>
+                    </div>
+
+                    <div class="relative">
+                        <input type="password" id="api-key-input" placeholder="AIzaSy..." 
+                               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent pr-10 transition">
+                        <button type="button" id="toggle-key-btn" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- AI Model Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5 myanmar-text">
+                            AI Model ရွေးချယ်ရန် (Free Limit ပိုများစေရန်)
+                        </label>
+                        <select id="model-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="gemini-3.5-flash-lite" selected>Gemini 3.5 Flash-Lite (Recommended)</option>
+                            <option value="gemini-3.8-flash">Gemini 3.8 Flash</option>
+                            <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite</option>
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                        </select>
+                    </div>
+
+                    <!-- Translation Context / Tone -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5 myanmar-text">
+                            ဘာသာပြန်မည့် ပုံစံ (Style / Context)
+                        </label>
+                        <select id="tone-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 myanmar-text">
+                            <option value="natural_movie">ရုပ်ရှင် / ဇာတ်လမ်းတွဲ (သဘာဝကျကျ ပြောစကားပုံစံ)</option>
+                            <option value="formal">တရားဝင် / မှတ်တမ်းရုပ်ရှင် (ယဉ်ကျေးသော အသုံးအနှုန်း)</option>
+                            <option value="casual">လူငယ်သုံး / ပေါ့ပေါ့ပါးပါး (Anime / Vlog ပုံစံ)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Info Box about chunk splitting -->
+                <div class="bg-indigo-950/40 border border-indigo-500/20 rounded-xl p-3.5 flex items-start gap-3">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5"></i>
+                    <div class="text-xs text-slate-300 myanmar-text space-y-1">
+                        <p class="font-semibold text-emerald-300">VPN မလိုဘဲ တိုက်ရိုက်သုံးနိုင်ပါပြီ</p>
+                        <p>Netlify Server မှတစ်ဆင့် Google ဆီသို့ လှမ်းချိတ်ပေးမည်ဖြစ်ပြီး စာတန်း (၆၀) ခုစီ အပိုင်းလိုက်ခွဲ၍ ဘာသာပြန်ပေးပါမည်။</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: File Upload Dropzone -->
+            <div class="lg:col-span-7 bg-slate-800/50 border border-slate-700/80 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+                <h2 class="text-base font-semibold text-white flex items-center gap-2 mb-4">
+                    <i data-lucide="file-up" class="w-4 h-4 text-cyan-400"></i>
+                    <span>၂။ Subtitle ဖိုင် (.srt / .art) ရွေးချယ်ပါ</span>
+                </h2>
+
+                <div id="drop-zone" class="flex-grow border-2 border-dashed border-slate-600 hover:border-indigo-500 bg-slate-900/50 hover:bg-slate-900/80 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all group">
+                    <input type="file" id="file-input" accept=".srt,.art,.txt" class="hidden">
+                    <div class="w-14 h-14 rounded-2xl bg-slate-800 group-hover:bg-indigo-600/20 flex items-center justify-center mb-4 transition-colors">
+                        <i data-lucide="upload-cloud" class="w-7 h-7 text-indigo-400 group-hover:scale-110 transition-transform"></i>
+                    </div>
+                    <p class="text-sm sm:text-base font-medium text-white mb-1 myanmar-text">
+                        ဖိုင်ကို ဤနေရာသို့ ဆွဲထည့်ပါ (သို့မဟုတ်) နှိပ်၍ ရွေးချယ်ပါ
+                    </p>
+                    <p class="text-xs text-slate-400">
+                        Supported formats: <span class="text-cyan-400 font-mono">.srt</span>, <span class="text-cyan-400 font-mono">.art</span>
+                    </p>
+                </div>
+
+                <!-- Selected File Info Bar -->
+                <div id="file-info-bar" class="hidden mt-4 bg-slate-900 border border-slate-700 rounded-xl p-3.5 flex items-center justify-between">
+                    <div class="flex items-center space-x-3 overflow-hidden">
+                        <div class="bg-cyan-500/10 p-2 rounded-lg text-cyan-400 shrink-0">
+                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                        </div>
+                        <div class="truncate">
+                            <p id="file-name-display" class="text-sm font-medium text-white truncate">movie.srt</p>
+                            <p id="file-stats-display" class="text-xs text-slate-400">0 subtitles • 0 chunks (60/batch)</p>
+                        </div>
+                    </div>
+                    <button id="clear-file-btn" class="p-2 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition" title="ဖိုင်ဖယ်ရှားရန်">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action & Progress Section -->
+        <div class="bg-slate-800/50 border border-slate-700/80 rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-base font-semibold text-white myanmar-text">၃။ ဘာသာပြန်ခြင်း စတင်ရန်</h3>
+                    <p id="status-text" class="text-xs text-slate-400 myanmar-text mt-0.5">ဖိုင်ရွေးချယ်ပြီးပါက "ဘာသာပြန်မည်" ခလုတ်ကို နှိပ်ပါ။</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <button id="stop-btn" disabled class="hidden px-4 py-2.5 rounded-xl text-sm font-medium bg-rose-600/20 text-rose-400 border border-rose-500/30 hover:bg-rose-600/30 disabled:opacity-50 transition flex items-center gap-2">
+                        <i data-lucide="square" class="w-4 h-4"></i>
+                        <span>ရပ်တန့်မည်</span>
+                    </button>
+
+                    <button id="translate-btn" disabled class="px-6 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-400 text-white shadow-lg shadow-indigo-600/25 disabled:shadow-none transition flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span class="myanmar-text">မြန်မာဘာသာပြန်မည်</span>
+                    </button>
+
+                    <button id="download-btn" disabled class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 text-white shadow-lg shadow-emerald-600/25 disabled:shadow-none transition flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span class="myanmar-text">.SRT ဖိုင်ဒေါင်းလုဒ်ဆွဲမည်</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="space-y-1.5">
+                <div class="flex justify-between text-xs font-medium">
+                    <span id="progress-label" class="text-slate-400">Progress: 0 / 0 Chunks</span>
+                    <span id="progress-percent" class="text-indigo-400">0%</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-slate-700/80 p-0.5">
+                    <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Preview Section (Original vs Myanmar) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Original Subtitle Preview -->
+            <div class="bg-slate-800/50 border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col h-96">
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-700/80">
+                    <span class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                        <i data-lucide="file-code" class="w-4 h-4 text-slate-400"></i>
+                        မူရင်းစာသား (Original)
+                    </span>
+                    <span id="orig-count-badge" class="text-xs bg-slate-900 text-slate-400 px-2.5 py-0.5 rounded-md border border-slate-700">0 lines</span>
+                </div>
+                <div id="original-preview" class="flex-grow overflow-y-auto space-y-3 pr-2 text-xs sm:text-sm font-mono text-slate-300">
+                    <div class="h-full flex flex-col items-center justify-center text-slate-500 text-center">
+                        <i data-lucide="subtitles" class="w-8 h-8 mb-2 opacity-40"></i>
+                        <p class="myanmar-text">ဖိုင်တင်ပြီးပါက မူရင်းစာသားများ ဤနေရာတွင် ပေါ်လာပါမည်။</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Translated Subtitle Preview -->
+            <div class="bg-slate-800/50 border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col h-96">
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-700/80">
+                    <span class="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                        မြန်မာဘာသာပြန် (Translated)
+                    </span>
+                    <button id="copy-result-btn" class="text-xs bg-slate-900 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700 transition flex items-center gap-1">
+                        <i data-lucide="copy" class="w-3 h-3"></i> Copy All
+                    </button>
+                </div>
+                <div id="translated-preview" class="flex-grow overflow-y-auto space-y-3 pr-2 text-xs sm:text-sm myanmar-text text-slate-200">
+                    <div class="h-full flex flex-col items-center justify-center text-slate-500 text-center">
+                        <i data-lucide="sparkles" class="w-8 h-8 mb-2 opacity-40"></i>
+                        <p class="myanmar-text">ဘာသာပြန်ပြီးသည့် စာသားများ အပိုင်းလိုက် တိုက်ရိုက်ပေါ်လာပါမည်။</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-900/50 py-5 mt-8">
+        <div class="max-w-6xl mx-auto px-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>Powered by Google Gemini API & Netlify Serverless Proxy</p>
+            <p class="myanmar-text">VPN မလိုဘဲ အသုံးပြုနိုင်ရန် တည်ဆောက်ထားသည်</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        lucide.createIcons();
+
+        const CHUNK_SIZE = 60;
+        let parsedSubtitles = [];
+        let translatedSubtitles = [];
+        let originalFileName = 'subtitle.srt';
+        let isTranslating = false;
+        let abortTranslation = false;
+
+        const apiKeyInput = document.getElementById('api-key-input');
+        const toggleKeyBtn = document.getElementById('toggle-key-btn');
+        const modelSelect = document.getElementById('model-select');
+        const toneSelect = document.getElementById('tone-select');
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileInfoBar = document.getElementById('file-info-bar');
+        const fileNameDisplay = document.getElementById('file-name-display');
+        const fileStatsDisplay = document.getElementById('file-stats-display');
+        const clearFileBtn = document.getElementById('clear-file-btn');
+        const translateBtn = document.getElementById('translate-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const statusText = document.getElementById('status-text');
+        const progressLabel = document.getElementById('progress-label');
+        const progressPercent = document.getElementById('progress-percent');
+        const progressBar = document.getElementById('progress-bar');
+        const originalPreview = document.getElementById('original-preview');
+        const translatedPreview = document.getElementById('translated-preview');
+        const origCountBadge = document.getElementById('orig-count-badge');
+        const copyResultBtn = document.getElementById('copy-result-btn');
+
+        const savedKey = localStorage.getItem('gemini_srt_api_key');
+        if (savedKey) apiKeyInput.value = savedKey;
+
+        const savedModel = localStorage.getItem('gemini_srt_model');
+        if (savedModel && Array.from(modelSelect.options).some(opt => opt.value === savedModel)) {
+            modelSelect.value = savedModel;
+        } else {
+            localStorage.setItem('gemini_srt_model', modelSelect.value);
+        }
+
+        apiKeyInput.addEventListener('input', () => {
+            localStorage.setItem('gemini_srt_api_key', apiKeyInput.value.trim());
+            updateButtonStates();
+        });
+
+        modelSelect.addEventListener('change', () => {
+            localStorage.setItem('gemini_srt_model', modelSelect.value);
+        });
+
+        toggleKeyBtn.addEventListener('click', () => {
+            const isPassword = apiKeyInput.type === 'password';
+            apiKeyInput.type = isPassword ? 'text' : 'password';
+            toggleKeyBtn.innerHTML = isPassword 
+                ? '<i data-lucide="eye-off" class="w-4 h-4"></i>' 
+                : '<i data-lucide="eye" class="w-4 h-4"></i>';
+            lucide.createIcons();
+        });
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                info: 'bg-slate-800 border-indigo-500 text-white',
+                success: 'bg-slate-800 border-emerald-500 text-emerald-300',
+                error: 'bg-slate-800 border-rose-500 text-rose-300',
+                warning: 'bg-slate-800 border-amber-500 text-amber-300'
+            };
+
+            const icons = {
+                info: 'info',
+                success: 'check-circle',
+                error: 'alert-circle',
+                warning: 'alert-triangle'
+            };
+
+            toast.className = `pointer-events-auto border-l-4 ${colors[type]} px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm myanmar-text transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.innerHTML = `
+                <i data-lucide="${icons[type]}" class="w-5 h-5 shrink-0"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-indigo-500', 'bg-slate-900');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-indigo-500', 'bg-slate-900');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-indigo-500', 'bg-slate-900');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        clearFileBtn.addEventListener('click', () => {
+            if (isTranslating) {
+                showToast('ဘာသာပြန်နေစဉ် ဖိုင်ဖျက်၍မရပါ။ ဦးစွာ ရပ်တန့်ပါ။', 'warning');
+                return;
+            }
+            resetApp();
+        });
+
+        function resetApp() {
+            parsedSubtitles = [];
+            translatedSubtitles = [];
+            fileInput.value = '';
+            fileInfoBar.classList.add('hidden');
+            dropZone.classList.remove('hidden');
+            origCountBadge.textContent = '0 lines';
+            originalPreview.innerHTML = `
+                <div class="h-full flex flex-col items-center justify-center text-slate-500 text-center">
+                    <i data-lucide="subtitles" class="w-8 h-8 mb-2 opacity-40"></i>
+                    <p class="myanmar-text">ဖိုင်တင်ပြီးပါက မူရင်းစာသားများ ဤနေရာတွင် ပေါ်လာပါမည်။</p>
+                </div>`;
+            translatedPreview.innerHTML = `
+                <div class="h-full flex flex-col items-center justify-center text-slate-500 text-center">
+                    <i data-lucide="sparkles" class="w-8 h-8 mb-2 opacity-40"></i>
+                    <p class="myanmar-text">ဘာသာပြန်ပြီးသည့် စာသားများ အပိုင်းလိုက် တိုက်ရိုက်ပေါ်လာပါမည်။</p>
+                </div>`;
+            updateProgress(0, 0);
+            statusText.textContent = 'ဖိုင်ရွေးချယ်ပြီးပါက "ဘာသာပြန်မည်" ခလုတ်ကို နှိပ်ပါ။';
+            lucide.createIcons();
+            updateButtonStates();
+        }
+
+        function parseSRT(content) {
+            const normalized = content.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            const blocks = normalized.trim().split(/\n\s*\n/);
+            const result = [];
+
+            for (let i = 0; i < blocks.length; i++) {
+                const lines = blocks[i].split('\n').map(l => l.trim()).filter(l => l !== '');
+                if (lines.length >= 2) {
+                    const timeRegex = /\d{2}:\d{2}:\d{2}[,\.]\d{3}\s*-->\s*\d{2}:\d{2}:\d{2}[,\.]\d{3}/;
+                    if (timeRegex.test(lines[1])) {
+                        result.push({
+                            id: lines[0],
+                            time: lines[1],
+                            text: lines.slice(2).join('\n')
+                        });
+                    } else if (timeRegex.test(lines[0])) {
+                        result.push({
+                            id: String(result.length + 1),
+                            time: lines[0],
+                            text: lines.slice(1).join('\n')
+                        });
+                    }
+                }
+            }
+            return result;
+        }
+
+        function handleFile(file) {
+            originalFileName = file.name;
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const content = e.target.result;
+                parsedSubtitles = parseSRT(content);
+
+                if (parsedSubtitles.length === 0) {
+                    showToast('Subtitle format မှားယွင်းနေပါသည်။ မှန်ကန်သော .srt / .art ဖိုင်ဖြစ်ကြောင်း စစ်ဆေးပါ။', 'error');
+                    return;
+                }
+
+                translatedSubtitles = [];
+                const totalChunks = Math.ceil(parsedSubtitles.length / CHUNK_SIZE);
+
+                dropZone.classList.add('hidden');
+                fileInfoBar.classList.remove('hidden');
+                fileNameDisplay.textContent = file.name;
+                fileStatsDisplay.textContent = `${parsedSubtitles.length} subtitles • ${totalChunks} chunks (${CHUNK_SIZE}/batch)`;
+                origCountBadge.textContent = `${parsedSubtitles.length} blocks`;
+
+                renderOriginalPreview();
+                translatedPreview.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-slate-500 text-center">
+                        <i data-lucide="play-circle" class="w-8 h-8 mb-2 opacity-40 text-indigo-400"></i>
+                        <p class="myanmar-text">အသင့်ဖြစ်ပါပြီ။ "မြန်မာဘာသာပြန်မည်" ကိုနှိပ်ပါ။</p>
+                    </div>`;
+                lucide.createIcons();
+
+                updateProgress(0, totalChunks);
+                statusText.textContent = `စုစုပေါင်း စာတန်း ${parsedSubtitles.length} ကြောင်းကို အပိုင်း ${totalChunks} ပိုင်းခွဲ၍ ဘာသာပြန်ရန် အသင့်ဖြစ်ပါပြီ။`;
+                updateButtonStates();
+                showToast(`ဖိုင်ဖတ်ရှုပြီးပါပြီ (${parsedSubtitles.length} subtitles)`, 'success');
+            };
+
+            reader.onerror = () => {
+                showToast('ဖိုင်ဖတ်ရှုရာတွင် အမှားအယွင်း ဖြစ်ပေါ်ပါသည်။', 'error');
+            };
+
+            reader.readAsText(file);
+        }
+
+        function renderOriginalPreview() {
+            originalPreview.innerHTML = '';
+            const displayLimit = Math.min(parsedSubtitles.length, 200);
+            const fragment = document.createDocumentFragment();
+
+            for (let i = 0; i < displayLimit; i++) {
+                const sub = parsedSubtitles[i];
+                const div = document.createElement('div');
+                div.className = 'bg-slate-900/70 p-2.5 rounded-lg border border-slate-800';
+                div.innerHTML = `
+                    <div class="flex justify-between text-[11px] text-slate-500 mb-1">
+                        <span class="font-bold text-indigo-400">#${sub.id}</span>
+                        <span>${sub.time}</span>
+                    </div>
+                    <p class="text-slate-200 whitespace-pre-line">${escapeHTML(sub.text)}</p>
+                `;
+                fragment.appendChild(div);
+            }
+
+            if (parsedSubtitles.length > displayLimit) {
+                const moreNote = document.createElement('p');
+                moreNote.className = 'text-center text-xs text-slate-500 py-2 myanmar-text';
+                moreNote.textContent = `... ကျန်ရှိသော ${parsedSubtitles.length - displayLimit} ကြောင်းကိုလည်း အပြည့်အဝ ဘာသာပြန်ပေးပါမည် ...`;
+                fragment.appendChild(moreNote);
+            }
+
+            originalPreview.appendChild(fragment);
+        }
+
+        function appendTranslatedChunkToPreview(chunkItems) {
+            if (translatedSubtitles.length === chunkItems.length) {
+                translatedPreview.innerHTML = '';
+            }
+
+            const fragment = document.createDocumentFragment();
+            chunkItems.forEach(sub => {
+                const div = document.createElement('div');
+                div.className = 'bg-slate-900/80 p-2.5 rounded-lg border border-emerald-500/20';
+                div.innerHTML = `
+                    <div class="flex justify-between text-[11px] text-slate-500 mb-1 font-mono">
+                        <span class="font-bold text-emerald-400">#${sub.id}</span>
+                        <span>${sub.time}</span>
+                    </div>
+                    <p class="text-white whitespace-pre-line">${escapeHTML(sub.text)}</p>
+                `;
+                fragment.appendChild(div);
+            });
+
+            translatedPreview.appendChild(fragment);
+            translatedPreview.scrollTop = translatedPreview.scrollHeight;
+        }
+
+        function updateProgress(completedChunks, totalChunks) {
+            const percent = totalChunks === 0 ? 0 : Math.round((completedChunks / totalChunks) * 100);
+            progressLabel.textContent = `Progress: ${completedChunks} / ${totalChunks} Chunks`;
+            progressPercent.textContent = `${percent}%`;
+            progressBar.style.width = `${percent}%`;
+        }
+
+        function updateButtonStates() {
+            const hasKey = apiKeyInput.value.trim().length > 10;
+            const hasFile = parsedSubtitles.length > 0;
+
+            translateBtn.disabled = isTranslating || !hasKey || !hasFile;
+            downloadBtn.disabled = isTranslating || translatedSubtitles.length === 0;
+
+            if (isTranslating) {
+                stopBtn.classList.remove('hidden');
+                stopBtn.disabled = false;
+                translateBtn.classList.add('opacity-60');
+            } else {
+                stopBtn.classList.add('hidden');
+                stopBtn.disabled = true;
+                translateBtn.classList.remove('opacity-60');
+            }
+        }
+
+        stopBtn.addEventListener('click', () => {
+            abortTranslation = true;
+            stopBtn.disabled = true;
+            statusText.textContent = 'ဘာသာပြန်ခြင်းကို ရပ်တန့်နေပါသည်...';
+            showToast('ဘာသာပြန်ခြင်းကို ရပ်တန့်လိုက်ပါသည်။', 'warning');
+        });
+
+        async function translateChunkViaNetlifyProxy(chunk, apiKey, modelName, toneInstruction) {
+            const proxyUrl = '/.netlify/functions/translate';
+
+            const inputPayload = chunk.map((item, idx) => ({
+                index: idx,
+                text: item.text
+            }));
+
+            const systemInstruction = `You are an expert professional subtitle translator translating subtitles into natural, accurate Burmese (Myanmar Unicode).
+Style/Tone instruction: ${toneInstruction}
+Rules:
+1. Translate every subtitle item accurately into natural Myanmar language.
+2. Keep line breaks (\\n) where appropriate for subtitle readability.
+3. Preserve names, technical terms, or sound effects appropriately in Burmese context.
+4. Return ONLY a JSON array matching the exact 'index' and translated 'text' for every item provided.`;
+
+            const requestBody = {
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                },
+                contents: [{
+                    role: "user",
+                    parts: [{
+                        text: `Translate the following ${chunk.length} subtitle lines into Myanmar:\n${JSON.stringify(inputPayload)}`
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.3,
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                index: { type: "INTEGER" },
+                                text: { type: "STRING" }
+                            },
+                            required: ["index", "text"]
+                        }
+                    }
+                }
+            };
+
+            const delays = [1000, 2000, 4000, 8000];
+            for (let attempt = 0; attempt <= delays.length; attempt++) {
+                if (abortTranslation) throw new Error('ABORTED');
+
+                try {
+                    const response = await fetch(proxyUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            apiKey,
+                            modelName,
+                            requestBody
+                        })
+                    });
+
+                    const errData = !response.ok ? await response.json().catch(() => ({})) : null;
+
+                    if (!response.ok) {
+                        const errMsg = errData?.error?.message || `HTTP Error ${response.status}`;
+                        const sourceTag = response.status === 404 ? `[${modelName}] ` : '';
+                        throw new Error(`${sourceTag}${errMsg}`);
+                    }
+
+                    const data = await response.json();
+                    const rawJsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (!rawJsonText) {
+                        throw new Error('Empty response from Gemini API');
+                    }
+
+                    const translatedArray = JSON.parse(rawJsonText);
+
+                    return chunk.map((origItem, idx) => {
+                        const found = translatedArray.find(t => t.index === idx) || translatedArray[idx];
+                        return {
+                            id: origItem.id,
+                            time: origItem.time,
+                            text: found && found.text ? found.text.trim() : origItem.text
+                        };
+                    });
+
+                } catch (err) {
+                    if (err.message === 'ABORTED' || err.message.includes('API key') || err.message.includes('quota')) {
+                        throw err;
+                    }
+                    if (attempt === delays.length) {
+                        throw err;
+                    }
+                    await new Promise(res => setTimeout(res, delays[attempt]));
+                }
+            }
+        }
+
+        translateBtn.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            const selectedModel = modelSelect.value;
+
+            if (!apiKey) {
+                showToast('ကျေးဇူးပြု၍ Gemini API Key ထည့်သွင်းပါ။', 'error');
+                apiKeyInput.focus();
+                return;
+            }
+            if (parsedSubtitles.length === 0) {
+                showToast('ကျေးဇူးပြု၍ Subtitle ဖိုင် ရွေးချယ်ပါ။', 'error');
+                return;
+            }
+
+            const toneMap = {
+                natural_movie: "Natural conversational Burmese suitable for movies and TV series (e.g., using natural pronouns like ကျွန်တော်/ကျွန်မ/မင်း/ငါ depending on context).",
+                formal: "Polite, formal, and informative Burmese suitable for documentaries, news, or educational videos.",
+                casual: "Casual, lively, and modern Burmese suitable for anime, YouTube vlogs, and youth content."
+            };
+            const selectedTone = toneMap[toneSelect.value] || toneMap.natural_movie;
+
+            isTranslating = true;
+            abortTranslation = false;
+            translatedSubtitles = [];
+            updateButtonStates();
+
+            const chunks = [];
+            for (let i = 0; i < parsedSubtitles.length; i += CHUNK_SIZE) {
+                chunks.push(parsedSubtitles.slice(i, i + CHUNK_SIZE));
+            }
+
+            const totalChunks = chunks.length;
+            updateProgress(0, totalChunks);
+
+            try {
+                for (let c = 0; c < totalChunks; c++) {
+                    if (abortTranslation) break;
+
+                    statusText.textContent = `[${selectedModel}] အပိုင်း (${c + 1} / ${totalChunks}) ကို ဘာသာပြန်နေပါသည်... (${chunks[c].length} subtitles)`;
+                    
+                    const translatedChunk = await translateChunkViaNetlifyProxy(chunks[c], apiKey, selectedModel, selectedTone);
+                    
+                    translatedSubtitles.push(...translatedChunk);
+                    appendTranslatedChunkToPreview(translatedChunk);
+                    updateProgress(c + 1, totalChunks);
+                }
+
+                if (!abortTranslation) {
+                    statusText.textContent = `ဘာသာပြန်ခြင်း အောင်မြင်စွာ ပြီးဆုံးပါပြီ။ (စုစုပေါင်း ${translatedSubtitles.length} ကြောင်း)`;
+                    showToast('မြန်မာဘာသာပြန်ခြင်း အားလုံးပြီးဆုံးပါပြီ!', 'success');
+                }
+            } catch (error) {
+                if (error.message !== 'ABORTED') {
+                    console.error(error);
+                    statusText.textContent = `အမှားအယွင်း ဖြစ်ပေါ်ပါသည်: ${error.message}`;
+                    showToast(`Error: ${error.message}`, 'error');
+                }
+            } finally {
+                isTranslating = false;
+                updateButtonStates();
+            }
+        });
+
+        function generateMergedSRT() {
+            return translatedSubtitles
+                .map(sub => `${sub.id}\n${sub.time}\n${sub.text}`)
+                .join('\n\n') + '\n';
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            if (translatedSubtitles.length === 0) return;
+
+            const srtContent = generateMergedSRT();
+            const blob = new Blob(['\uFEFF' + srtContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+
+            const baseName = originalFileName.replace(/\.[^/.]+$/, '');
+            const downloadName = `${baseName}_my.srt`;
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = downloadName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast(`${downloadName} ကို ဒေါင်းလုဒ်ဆွဲပြီးပါပြီ။`, 'success');
+        });
+
+        copyResultBtn.addEventListener('click', () => {
+            if (translatedSubtitles.length === 0) {
+                showToast('ကူးယူရန် ဘာသာပြန်စာသား မရှိသေးပါ။', 'warning');
+                return;
+            }
+            const srtContent = generateMergedSRT();
+            const textArea = document.createElement('textarea');
+            textArea.value = srtContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast('SRT စာသားအားလုံးကို Clipboard သို့ ကူးယူပြီးပါပြီ။', 'success');
+            } catch (err) {
+                showToast('ကူးယူရာတွင် မအောင်မြင်ပါ။', 'error');
+            }
+            document.body.removeChild(textArea);
+        });
+
+        function escapeHTML(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
